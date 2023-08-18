@@ -1,4 +1,5 @@
 from random import randint
+from dataclasses import dataclass
 
 
 class MineSweeper:
@@ -22,9 +23,9 @@ class MineSweeper:
 
         self.print_map()
 
-    def reveal(self, user_input: tuple[int, int]):
-        x, y = user_input
-        self.grid[x][y] = 2
+    def reveal(self, user_input: tuple[int, int, int]):
+        x, y, z = user_input
+        self.grid[x][y] = z
         self.print_map()
 
     def print_map(self):
@@ -32,6 +33,29 @@ class MineSweeper:
         for row_idx, row in enumerate(self.grid):
             print("  " + "-" * (self.dim_size * 4 - 1))
             print(row_idx, " | ".join(str(cell) for cell in row))
+
+
+@dataclass
+class DefineTile:
+    dim_size: int
+
+    @staticmethod
+    def get_surrounding_coords(x: int, y: int, dim_size: int):
+        return [
+            (x + i, y + j)
+            for i in range(-1, 2)
+            for j in range(-1, 2)
+            if 0 <= x + i < dim_size
+            and 0 <= y + j < dim_size
+            and not (i == 0 and j == 0)
+        ]
+
+    @staticmethod
+    def count_surrounding_bombs(grid: list[list[int]], x: int, y: int) -> int:
+        dim_size = len(grid)
+        surrounding_bombs = DefineTile.get_surrounding_coords(x, y, dim_size)
+        bomb_count = sum(grid[i][j] for i, j in surrounding_bombs if grid[i][j] == 1)
+        return bomb_count
 
 
 def fixInput(x: str, y: str):
@@ -55,7 +79,9 @@ def run():
 
         if input_result is not None:
             x_int, y_int = input_result
-            a.reveal((x_int, y_int))
+            bomb_count = DefineTile(10).count_surrounding_bombs(a.grid, x_int, y_int)
+
+            a.reveal((x_int, y_int, bomb_count))
 
 
 if __name__ == "__main__":
